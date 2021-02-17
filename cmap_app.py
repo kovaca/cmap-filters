@@ -8,7 +8,8 @@ import json
 
 st.title("Colormap filter demo")
 st.write("""This app cross references a catalogue of my favorite colormaps, 
-  and implements a simple svg filter argument to apply a colormap to a Leaflet map layer. 
+  and implements a simple svg filter argument to apply a colormap to a Leaflet map layer.
+  Filter component transfer tables remap grayscale source colors to colormap values. YMMV for rgb inputs.
   The sidebar shows color interpolations in various common colorspaces.""")
 
 def colorfunc(color_1, color_2, cspace="CAM02-UCS",N=256):
@@ -45,6 +46,19 @@ feFuncG = np.array2string(a[:,1], precision=5,floatmode="fixed", separator=' ')[
 feFuncB = np.array2string(a[:,2], precision=5,floatmode="fixed", separator=' ')[1:-1].replace("\n","")
 
 
+placeholder = st.empty()
+
+col1, col2, col3 = st.beta_columns(3)
+with col1:
+  lat = st.number_input("Lat", value=51.50)
+with col2:
+  lng = st.number_input("Lng", value=-0.09)
+with col3:
+  zoom = st.number_input("zoom",value=13)
+
+tile_cache = st.text_input('Privide your own {z}/{y}/{x} tile cache', 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
+attrib = st.text_input('Add proper map attribution for good measure', 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community')
+
 leafy_map = f"""<head>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -59,10 +73,11 @@ leafy_map = f"""<head>
    <div id="mapid" style="width: 600px; height: 400px; position: relative; outline: none;">
    </div> 
   <script>
-    var mymap = L.map('mapid').setView([51.505, -0.09], 13);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}', {{
-	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-}}).addTo(mymap);
+    var mymap = L.map('mapid').setView([{lat}, {lng}], {zoom});
+    L.tileLayer('{tile_cache}', 
+    {{
+	  attribution: '{attrib}'
+    }}).addTo(mymap);
   </script>
   
   <style>
@@ -100,7 +115,8 @@ c2 = rgb2hex(cmap(1.0))
 color2 = st.sidebar.color_picker('End Color', c2)
 st.sidebar.write(color2)
 
-components.html(leafy_map,height=425)
+with placeholder.beta_container():
+  components.html(leafy_map,height=450)
 
 st.sidebar.header('Color interpolations:')
 st.sidebar.image(np.vstack([colorfunc(color1,color2,cspace=i) for i in spaces]),clamp=True)
