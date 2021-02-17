@@ -5,3 +5,12 @@ To launch:
 ```
 streamlit run cmap_app.py
 ```
+
+Or build an image and run with docker: 
+```
+docker build -f Dockerfile -t app:latest .
+```
+
+```
+docker run -p 8501:8501 app:latest
+```

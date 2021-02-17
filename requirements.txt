@@ -2,4 +2,3 @@ numpy
 streamlit
 colorspacious
 matplotlib
-json
